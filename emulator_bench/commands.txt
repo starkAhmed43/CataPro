@@ -1,0 +1,64 @@
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/build_tvt_features.py \
+  --input_csv /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/val.csv \
+  --output_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/val_feats.pkl \
+  --target_col log10_value
+
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/build_tvt_features.py \
+  --input_csv /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/test.csv \
+  --output_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/test_feats.pkl \
+  --target_col log10_value
+
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/build_tvt_features.py \
+  --input_csv /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/train.csv \
+  --output_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/train_feats.pkl \
+  --target_col log10_value
+
+
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/train_single_target_tvt.py \
+  --train_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/train_feats.pkl \
+  --val_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/val_feats.pkl \
+  --test_pkl /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/test_feats.pkl \
+  --out_dir /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/results \
+  --task_name ki
+  
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/run_split_benchmarks.py --value_type kcat
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/run_split_benchmarks.py --value_type km
+CUDA_VISIBLE_DEVICES=3 python emulator_bench/run_split_benchmarks.py --value_type ki
+
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/run_split_benchmarks.py \
+  --value_type kcat \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/kcat/optuna_studies/kcat_t04__substrate_splits_best_hparams.json \
+  --split_groups substrate_splits \
+  --overwrite
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/run_split_benchmarks.py \
+  --value_type km \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/km/optuna_studies/km_t04__substrate_splits_best_hparams.json \
+  --split_groups substrate_splits \
+  --overwrite
+CUDA_VISIBLE_DEVICES=1 python emulator_bench/run_split_benchmarks.py \
+  --value_type ki \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/optuna_studies/ki_t04__substrate_splits_best_hparams.json \
+  --split_groups substrate_splits \
+  --overwrite
+
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/run_split_benchmarks.py \
+  --value_type kcat \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/kcat/optuna_studies/kcat_t04__substrate_splits_best_hparams.json \
+  --split_groups enzyme_sequence_splits \
+  --overwrite
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/run_split_benchmarks.py \
+  --value_type km \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/km/optuna_studies/km_t04__substrate_splits_best_hparams.json \
+  --split_groups enzyme_sequence_splits \
+  --overwrite
+CUDA_VISIBLE_DEVICES=0 python emulator_bench/run_split_benchmarks.py \
+  --value_type ki \
+  --seeds 41 42 43 44 45 \
+  --hparams_json /home/adhil/github/EMULaToR/data/processed/baselines/CataPro/ki/optuna_studies/ki_t04__substrate_splits_best_hparams.json \
+  --split_groups enzyme_sequence_splits \
+  --overwrite
