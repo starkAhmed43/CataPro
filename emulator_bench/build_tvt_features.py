@@ -24,7 +24,8 @@ def build_features(
     cache_read=True,
     cache_write=True,
 ):
-    df = pd.read_csv(input_csv)
+    p = str(input_csv)
+    df = pd.read_parquet(p) if p.endswith(".parquet") else pd.read_csv(p)
 
     _require_columns(df, [sequence_col, smiles_col])
 

@@ -64,7 +64,7 @@ def main(args):
 
     model = SingleTaskRegressor(drop_rate=args.drop_rate, device=args.device)
     optimizer = th.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=0.01)
-    stopper = EarlyStopping(args.patience, args.min_delta)
+    stopper = EarlyStopping(args.epochs + 1 if args.no_early_stopping else args.patience, args.min_delta)
 
     best_model_path = out_dir / "bestmodel.pth"
     start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -169,6 +169,11 @@ if __name__ == "__main__":
         "--skip_singleton_batch",
         action="store_true",
         help="Matches OG Km behavior when a train batch has only one row.",
+    )
+    parser.add_argument(
+        "--no_early_stopping",
+        action="store_true",
+        help="Disable early stopping and train for the full --epochs.",
     )
 
     main(parser.parse_args())
