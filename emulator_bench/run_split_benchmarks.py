@@ -10,6 +10,45 @@ from tqdm.auto import tqdm
 
 BENCH_DIR = Path(__file__).resolve().parent
 DEFAULT_HPARAMS_JSON = BENCH_DIR / "default_hparams.json"
+RANDOM_SPLIT_GROUP_ALIAS = "random_splits"
+RANDOM_SPLIT_GROUP_PREFIX = "random_splits_grouped_"
+
+
+def is_random_split_group(split_group: str):
+    split_group = str(split_group)
+    return split_group == RANDOM_SPLIT_GROUP_ALIAS or split_group.startswith(RANDOM_SPLIT_GROUP_PREFIX)
+
+
+def expand_split_groups(value_root: Path, split_groups):
+    expanded = []
+    seen = set()
+    grouped_random_dirs = None
+
+    def add(split_group):
+        if split_group not in seen:
+            seen.add(split_group)
+            expanded.append(split_group)
+
+    for split_group in split_groups:
+        split_group = str(split_group)
+        if split_group != RANDOM_SPLIT_GROUP_ALIAS:
+            add(split_group)
+            continue
+
+        if grouped_random_dirs is None:
+            grouped_random_dirs = sorted(
+                child.name
+                for child in Path(value_root).glob(f"{RANDOM_SPLIT_GROUP_PREFIX}*")
+                if child.is_dir()
+            )
+
+        if grouped_random_dirs:
+            for grouped_split_group in grouped_random_dirs:
+                add(grouped_split_group)
+        elif (Path(value_root) / RANDOM_SPLIT_GROUP_ALIAS).exists():
+            add(RANDOM_SPLIT_GROUP_ALIAS)
+
+    return expanded
 
 
 def discover_split_jobs(value_root: Path, split_groups, explicit_thresholds=None):
@@ -20,14 +59,15 @@ def discover_split_jobs(value_root: Path, split_groups, explicit_thresholds=None
       - Thresholded: split_group contains threshold_* (or easy/medium/hard) subdirs.
     """
     jobs = []
-    for split_group in split_groups:
+    for split_group in expand_split_groups(value_root, split_groups):
         split_root = value_root / split_group
         if not split_root.exists():
             continue
 
         # Direct layout — files live right in the split group dir
         if _find_split_file(split_root, "train") and not explicit_thresholds:
-            jobs.append((split_group, split_group, split_root))
+            split_name = "random" if is_random_split_group(split_group) else split_group
+            jobs.append((split_group, split_name, split_root))
             continue
 
         # Thresholded layout
